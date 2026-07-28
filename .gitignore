@@ -1,0 +1,75 @@
+# Visual Studio
+.vs/
+*.VC.db
+*.VC.VC.opendb
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+Testing/
+compile_commands.json
+CMakeUserPresets.json
+cmake-build-*/
+build/
+build-*/
+out/
+out/build/
+out/install/
+
+# Ninja
+.ninja_deps
+.ninja_log
+build.ninja
+rules.ninja
+
+# Generated binaries and libraries
+*.obj
+*.o
+*.lo
+*.la
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+*.exe
+*.out
+*.app
+
+# Debug and linker artifacts
+*.pdb
+*.ipdb
+*.iobj
+*.ilk
+*.idb
+*.exp
+
+# Common build configuration folders
+[Dd]ebug/
+[Rr]elease/
+[Rr]elWithDebInfo/
+[Mm]inSizeRel/
+x64/
+x86/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Cache
+cache/
+temp/
+*.cache
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
