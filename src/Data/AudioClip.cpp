@@ -1,5 +1,7 @@
 #include "AudioClip.h"
 
+#include <stdexcept >
+
 AudioClip::AudioClip(std::string name, std::string filePath, std::shared_ptr<AudioBuffer> buffer)
 {
 	if (!buffer)

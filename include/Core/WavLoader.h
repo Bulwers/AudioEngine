@@ -15,7 +15,7 @@ public:
 
 private:
 
-	std::vector<float> convertSamplesToFloat(uint16_t audioFormat, uint16_t bitsPerSample, std::vector<uint8_t>& rawAudioData);
+	std::vector<float> convertSamplesToFloat(uint16_t audioFormat, uint16_t bitsPerSample, const std::vector<uint8_t>& rawAudioData) const;
 
 	static void validateFormat(uint16_t audioFormat, uint16_t bitsPerSample);
 
