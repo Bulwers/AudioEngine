@@ -5,11 +5,11 @@
 
 AudioBuffer::AudioBuffer(uint16_t channels, uint32_t sampleRate, uint16_t bitsPerSample, const std::vector<float>& audioData)
 {
-	if (channels == 0)
+	if (channels <= 0)
 	{
 		throw std::invalid_argument("AudioBuffer channels must be greater than 0.");
 	}
-	if (sampleRate == 0)
+	if (sampleRate <= 0)
 	{
 		throw std::invalid_argument("AudioBuffer sampleRate must be greater than 0.");
 	}

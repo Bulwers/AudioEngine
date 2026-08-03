@@ -1,8 +1,13 @@
 #include <iostream>
 
+#include "ResourceManager.h"
+
 int main()
 {
-    std::cout << "Hello, Audio Engine!\n";
+	ResourceManager resourceManager;
+
+	resourceManager.loadAudioBuffers();
+	resourceManager.getAudioBuffers();
 
     std::cin.get(); // Wait for Enter
 

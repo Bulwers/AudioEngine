@@ -35,6 +35,7 @@ target_include_directories(imgui PUBLIC
 target_link_libraries(imgui PUBLIC SDL3::SDL3)
 
 add_library(AudioEngineCore
+	src/Core/ResourceManager.cpp
 	src/Core/WavLoader.cpp
 	src/Data/AudioBuffer.cpp
 	src/Data/AudioClip.cpp

@@ -1,0 +1,35 @@
+#pragma once
+
+#include "AudioClip.h"
+#include "AudioBuffer.h"
+
+#include "WavLoader.h"
+
+#include <vector>
+#include <string>
+#include <memory>
+#include <unordered_map>
+
+
+class ResourceManager
+{
+public:
+
+	ResourceManager();
+
+	void checkAudioDirectories();
+
+	void saveAudioClips();
+	void loadAudioBuffers();
+	void loadAudioClips();
+
+	void getAudioBuffers();
+	void getAudioClips();
+
+private:
+
+	WavLoader wavLoader;
+
+	std::unordered_map<std::string, std::shared_ptr<AudioClip>> audioClips;
+	std::unordered_map<std::string, std::shared_ptr<AudioBuffer>> audioBuffers;
+};
