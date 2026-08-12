@@ -36,6 +36,7 @@ public:
 	const double getDuration() const { return buffer->getDuration(); }
 	AudioCategory getCategory() const { return category; }
 
+	void setBuffer(std::shared_ptr<AudioBuffer> newBuffer) { buffer = std::move(newBuffer); }
 	void setCategory(AudioCategory newCategory) { category = newCategory; }
 	void setName(const std::string& newName) { name = newName; }
 	void setVolume(float newVolume) { volume = newVolume; }
@@ -45,7 +46,9 @@ public:
 	bool isLooping() const { return looping; }
 	
 	void saveToFile(const std::string& clipFilePath) const;
-	AudioClip loadFromFile(const std::string& clipFilePath);
+	static AudioClip loadFromFile(const std::string& clipFilePath);
+
+	void printInfo() const;
 
 private:
 

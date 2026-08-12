@@ -3,7 +3,7 @@
 #include <cassert>
 #include <stdexcept>
 
-AudioBuffer::AudioBuffer(uint16_t channels, uint32_t sampleRate, uint16_t bitsPerSample, const std::vector<float>& audioData)
+AudioBuffer::AudioBuffer(std::string filePath, uint16_t channels, uint32_t sampleRate, uint16_t bitsPerSample, const std::vector<float>& audioData)
 {
 	if (channels <= 0)
 	{
@@ -18,6 +18,7 @@ AudioBuffer::AudioBuffer(uint16_t channels, uint32_t sampleRate, uint16_t bitsPe
 		throw std::invalid_argument("AudioBuffer sample count must be divisible by channel count.");
 	}
 
+	this->filePath = std::move(filePath);
 	this->channels = channels;
 	this->sampleRate = sampleRate;
 	samples = audioData;

@@ -162,7 +162,7 @@ std::shared_ptr<AudioBuffer> WavLoader::loadFile(const std::string& filePath) co
 
 	std::vector<float> bufferSamples = convertSamplesToFloat(finalAudioFormat, fmtData.bitsPerSample, rawAudioData);
 
-	return std::make_shared<AudioBuffer>(fmtData.numChannels, fmtData.sampleRate, fmtData.bitsPerSample, bufferSamples);
+	return std::make_shared<AudioBuffer>(filePath, fmtData.numChannels, fmtData.sampleRate, fmtData.bitsPerSample, bufferSamples);
 }
 
 void WavLoader::validateFormat(uint16_t audioFormat, uint16_t bitsPerSample)

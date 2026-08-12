@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 #include <fstream>
+#include <iostream>
+#include <cstring>
 
 namespace
 {
@@ -138,5 +140,17 @@ AudioClip AudioClip::loadFromFile(const std::string& clipFilePath)
 		looping,
 		loopStartFrame,
 		loopEndFrame);
+}
+
+void AudioClip::printInfo() const
+{
+	std::cout << "AudioClip Info:" << std::endl;
+	std::cout << "Name: " << name << std::endl;
+	std::cout << "File Path: " << filePath << std::endl;
+	std::cout << "Category: " << static_cast<int>(category) << std::endl;
+	std::cout << "Volume: " << volume << std::endl;
+	std::cout << "Looping: " << (looping ? "Yes" : "No") << std::endl;
+	std::cout << "Loop Start Frame: " << loopStartFrame << std::endl;
+	std::cout << "Loop End Frame: " << loopEndFrame << std::endl;
 }
 

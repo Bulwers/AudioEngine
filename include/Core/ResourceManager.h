@@ -19,9 +19,14 @@ public:
 
 	void checkAudioDirectories();
 
+	void createAudioClips();
+
 	void saveAudioClips();
 	void loadAudioBuffers();
 	void loadAudioClips();
+
+	std::shared_ptr<AudioBuffer> getAudioBuffer(const std::string& filePath);
+	std::shared_ptr<AudioClip> getAudioClip(const std::string& name);
 
 	void getAudioBuffers();
 	void getAudioClips();
