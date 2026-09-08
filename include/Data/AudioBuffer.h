@@ -9,7 +9,7 @@ class AudioBuffer
 public:
 
 	AudioBuffer() = default;
-	AudioBuffer(std::string filePath, uint16_t channels, uint32_t sampleRate, uint16_t bitsPerSample, const std::vector<float>& audioData);
+	AudioBuffer(std::string filePath, uint16_t channels, uint32_t sampleRate, uint16_t bitsPerSample, const std::vector<float>& samples);
 
 	const std::vector<float>& getSamples() const { return samples; }
 	std::vector<float>& getSamples() { return samples; }
@@ -18,6 +18,10 @@ public:
 	uint32_t getSampleRate() const { return sampleRate; }
 	std::string getFilePath() const { return filePath; }
 
+
+	// frame and channel are zero-based indexes
+	// For example, for a stereo buffer(2 channels)
+	// frame 0 channel 0 is the first sample of the left channel, and frame 0 channel 1 is the first sample of the right channel
 	float getSample(std::size_t frame, std::size_t channel) const;
 	void setSample(std::size_t frame, std::size_t channel, float value);
 
@@ -31,6 +35,7 @@ private:
 	std::string filePath;
 	uint16_t channels = 0;
 	uint32_t sampleRate = 0;
+	uint16_t bitsPerSample = 0;
 	std::vector<float> samples;
 
 };

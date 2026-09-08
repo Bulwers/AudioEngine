@@ -1,6 +1,4 @@
 #include "ResourceManager.h"
-#include "ResourceManager.h"
-#include "ResourceManager.h"
 
 #include <filesystem>
 #include <stdexcept>

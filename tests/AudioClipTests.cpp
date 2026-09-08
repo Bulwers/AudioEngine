@@ -4,22 +4,47 @@
 #include "AudioBuffer.h"
 #include <iostream>
 
+TEST(AudioClipTests, AudioClipDataTests)
+{
+	AudioBuffer buffer("path/to/clip.wav", 2, 44100, 16, std::vector<float>{0.0f, 0.1f, 0.2f, 0.3f});
+	AudioClip clip("Clip", "path/to/clip.wav", std::make_shared<AudioBuffer>(buffer));
+
+	EXPECT_EQ(clip.getName(), "Clip");
+	EXPECT_EQ(clip.getFilePath(), "path/to/clip.wav");
+	clip.setName("NewClip");
+	EXPECT_EQ(clip.getName(), "NewClip");
+
+	clip.setCategory(AudioCategory::SFX);
+	EXPECT_EQ(clip.getCategory(), AudioCategory::SFX);
+
+	EXPECT_EQ(clip.getVolume(), 1.0f);
+	clip.setVolume(0.5f);
+	EXPECT_EQ(clip.getVolume(), 0.5f);
+
+	clip.setLooping(true, 0, 1);
+	EXPECT_EQ(clip.isLooping(), true);
+
+}
+
 TEST(AudioClipTests, SaveAndLoadTests)
 {
-	AudioBuffer buffer1("path/to/clip1.wav", 2, 44100, 16, std::vector<float>{0.0f, 0.1f, 0.2f, 0.3f});
-	AudioBuffer buffer2("path/to/clip2.wav", 1, 22050, 8, std::vector<float>{0.4f, 0.5f});
-	AudioBuffer buffer3("path/to/clip3.wav", 2, 48000, 24, std::vector<float>{0.6f, 0.7f, 0.8f, 0.9f});
+	AudioBuffer buffer("path/to/clip.wav", 1, 44100, 8, std::vector<float>{0.0f, 0.1f, 0.2f, 0.3f});
+	AudioClip clip("Clip", "path/to/clip.wav", std::make_shared<AudioBuffer>(buffer));
 
-	AudioClip clip1("Clip1", "path/to/clip1.wav", std::make_shared<AudioBuffer>(buffer1));
-	AudioClip clip2("Clip2", "path/to/clip2.wav", std::make_shared<AudioBuffer>(buffer2));
-	AudioClip clip3("Clip3", "path/to/clip3.wav", std::make_shared<AudioBuffer>(buffer3));
+	clip.saveToFile("clip.dat");
+	clip.printInfo();
 
-	clip1.saveToFile("clip1.dat");
-	clip2.saveToFile("clip2.dat");
-	clip3.saveToFile("clip3.dat");
+	clip.setCategory(AudioCategory::Music);
+	clip.setLooping(false);
+	clip.setVolume(3.0f);
+	clip.setName("NewClip");
 
-	AudioClip loadedClip1 = AudioClip::loadFromFile("clip1.dat");
-	AudioClip loadedClip2 = AudioClip::loadFromFile("clip2.dat");
-	AudioClip loadedClip3 = AudioClip::loadFromFile("clip3.dat");
+	clip.saveToFile("newClip.dat");
+
+	AudioClip loadedClip = AudioClip::loadFromFile("clip.dat");
+	loadedClip.printInfo();
+
+	AudioClip loadedNewClip = AudioClip::loadFromFile("newClip.dat");
+	loadedNewClip.printInfo();
 
 }

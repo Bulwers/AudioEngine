@@ -33,16 +33,16 @@ public:
 	const std::string& getName() const { return name; }
 	const std::string& getFilePath() const { return filePath; }
 	const std::shared_ptr<AudioBuffer>& getBuffer() const { return buffer; }
-	const double getDuration() const { return buffer->getDuration(); }
+
+	double getDuration() const { return buffer ? buffer->getDuration() : 0.0; }
 	AudioCategory getCategory() const { return category; }
+	const float getVolume() const { return volume; }
 
 	void setBuffer(std::shared_ptr<AudioBuffer> newBuffer) { buffer = std::move(newBuffer); }
 	void setCategory(AudioCategory newCategory) { category = newCategory; }
 	void setName(const std::string& newName) { name = newName; }
 	void setVolume(float newVolume) { volume = newVolume; }
-	void setLooping(size_t startFrame, size_t endFrame);
-	void setLooping(bool loop) { looping = loop; }
-
+	void setLooping(bool loop, size_t startFrame = 0, size_t endFrame = 0);
 	bool isLooping() const { return looping; }
 	
 	void saveToFile(const std::string& clipFilePath) const;
