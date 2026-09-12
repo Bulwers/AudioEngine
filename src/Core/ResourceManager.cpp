@@ -1,11 +1,8 @@
 #include "ResourceManager.h"
-#include "ResourceManager.h"
-#include "ResourceManager.h"
 
 #include <filesystem>
 #include <stdexcept>
 #include <iostream>
-#include <fstream>
 
 namespace
 {
@@ -34,8 +31,6 @@ void ResourceManager::checkAudioDirectories()
 		"Assets/AudioClips/UI",
 		"Assets/AudioClips/Voice"
 	};
-	const std::string soundSrcDir = "Assets/SoundSrc";
-	const std::string audioClipsDir = "Assets/AudioClips";
 
 	for (const auto& dir : requiredDirs)
 	{
@@ -130,18 +125,7 @@ std::shared_ptr<AudioClip> ResourceManager::getAudioClip(const std::string& name
 	return it != audioClips.end() ? it->second : nullptr;
 }
 
-void ResourceManager::getAudioClips()
-{
-	for (const auto& pair : audioClips)
-	{
-		const std::string& clipName = pair.first;
-		const std::shared_ptr<AudioClip>& clip = pair.second;
-		std::cout << "AudioClip: " << clipName << ", FilePath: " << clip->getFilePath()
-			<< ", Duration: " << clip->getDuration() << " seconds" << std::endl;
-	}
-}
-
-void ResourceManager::getAudioBuffers()
+void ResourceManager::printAudioBuffers() const
 {
 	for (const auto& pair : audioBuffers)
 	{
@@ -149,5 +133,16 @@ void ResourceManager::getAudioBuffers()
 		const std::shared_ptr<AudioBuffer>& buffer = pair.second;
 		std::cout << "AudioBuffer: " << filePath << ", Channels: " << buffer->getChannels()
 			<< ", Sample Rate: " << buffer->getSampleRate() << ", Duration: " << buffer->getDuration() << " seconds" << std::endl;
+	}
+}
+
+void ResourceManager::printAudioClips() const
+{
+	for (const auto& pair : audioClips)
+	{
+		const std::string& clipName = pair.first;
+		const std::shared_ptr<AudioClip>& clip = pair.second;
+		std::cout << "AudioClip: " << clipName << ", FilePath: " << clip->getFilePath()
+			<< ", Duration: " << clip->getDuration() << " seconds" << std::endl;
 	}
 }

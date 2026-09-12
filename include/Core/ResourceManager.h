@@ -28,8 +28,8 @@ public:
 	std::shared_ptr<AudioBuffer> getAudioBuffer(const std::string& filePath);
 	std::shared_ptr<AudioClip> getAudioClip(const std::string& name);
 
-	void getAudioBuffers();
-	void getAudioClips();
+	void printAudioBuffers() const;
+	void printAudioClips() const;
 
 private:
 

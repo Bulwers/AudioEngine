@@ -77,15 +77,15 @@ TEST(ResourceManagerTests, LoadAudioBuffersAndClips)
 	writeTestWavFile(wavPath, 1, 44100, { 0, 32767, -32768, 16384, -16384 });
 
 	manager.loadAudioBuffers();
-	manager.getAudioBuffers();
+	manager.printAudioBuffers();
 	std::cout << "audioBuffers" << "\n";
 
 	manager.loadAudioClips();
-	manager.getAudioClips();
+	manager.printAudioClips();
 	std::cout << "audioClips1" << "\n";
 
 	manager.createAudioClips();
-	manager.getAudioClips();
+	manager.printAudioClips();
 	std::cout << "audioClips2" << "\n";
 
 	manager.saveAudioClips();

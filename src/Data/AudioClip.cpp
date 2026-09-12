@@ -33,14 +33,12 @@ namespace
 }
 
 AudioClip::AudioClip(std::string name, std::string filePath, std::shared_ptr<AudioBuffer> buffer)
+	: name(std::move(name)), filePath(std::move(filePath)), buffer(std::move(buffer))
 {
-	if (!buffer)
+	if (!this->buffer)
 	{
 		throw std::invalid_argument("AudioClip buffer cannot be null.");
 	}
-	this->name = std::move(name);
-	this->filePath = std::move(filePath);
-	this->buffer = std::move(buffer);
 }
 
 AudioClip::AudioClip(
@@ -51,19 +49,30 @@ AudioClip::AudioClip(
 	bool looping,
 	size_t loopStartFrame,
 	size_t loopEndFrame)
+		:name(std::move(name)),
+		filePath(std::move(filePath)),
+		category(category),
+		volume(volume),
+		looping(looping),
+		loopStartFrame(loopStartFrame),
+		loopEndFrame(loopEndFrame)
+
 {
-	this->name = std::move(name);
-	this->filePath = std::move(filePath);
-	this->category = category;
-	this->volume = volume;
-	this->looping = looping;
-	this->loopStartFrame = loopStartFrame;
-	this->loopEndFrame = loopEndFrame;
 }
 
-void AudioClip::setLooping(size_t startFrame, size_t endFrame)
+void AudioClip::setLooping(bool loop, size_t startFrame, size_t endFrame)
 {
-	looping = true;
+	looping = loop;
+	if (!loop)
+	{
+		loopStartFrame = 0;
+		loopEndFrame = 0;
+		return;
+	}
+	if (startFrame >= endFrame)
+	{
+		throw std::invalid_argument("Loop start frame cannot be greater or equal to loop end frame.");
+	}
 	loopStartFrame = startFrame;
 	loopEndFrame = endFrame;
 }
@@ -144,6 +153,7 @@ AudioClip AudioClip::loadFromFile(const std::string& clipFilePath)
 
 void AudioClip::printInfo() const
 {
+	std::cout << "\n";
 	std::cout << "AudioClip Info:" << std::endl;
 	std::cout << "Name: " << name << std::endl;
 	std::cout << "File Path: " << filePath << std::endl;
@@ -152,5 +162,6 @@ void AudioClip::printInfo() const
 	std::cout << "Looping: " << (looping ? "Yes" : "No") << std::endl;
 	std::cout << "Loop Start Frame: " << loopStartFrame << std::endl;
 	std::cout << "Loop End Frame: " << loopEndFrame << std::endl;
+	std::cout << "\n";
 }
 
