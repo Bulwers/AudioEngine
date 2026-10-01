@@ -35,6 +35,7 @@ target_include_directories(imgui PUBLIC
 target_link_libraries(imgui PUBLIC SDL3::SDL3)
 
 add_library(AudioEngineCore
+	src/Core/AudioEngine.cpp
 	src/Core/ResourceManager.cpp
 	src/Core/WavLoader.cpp
 	src/Core/AudioMixer.cpp
@@ -42,6 +43,7 @@ add_library(AudioEngineCore
 	src/Data/AudioClip.cpp
 	src/Playback/AudioSource.cpp
 	src/Playback/AudioDevice.cpp
+	src/UI/EditorUI.cpp
 )
 
 target_include_directories(AudioEngineCore PUBLIC
@@ -49,10 +51,12 @@ target_include_directories(AudioEngineCore PUBLIC
 	include/Data
 	include/Playback
 	include/DSP
+	include/UI
 )
 
 target_link_libraries(AudioEngineCore PUBLIC
 	SDL3::SDL3
+	imgui
 )
 
 add_executable(AudioEngine

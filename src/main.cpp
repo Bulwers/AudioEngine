@@ -3,73 +3,106 @@
 
 #include <SDL3/SDL.h>    
 
-#include "ResourceManager.h"
-#include "AudioMixer.h"
-#include "AudioSource.h"
-#include "AudioDevice.h"
+#include "AudioEngine.h"
+#include "EditorUI.h"
+#include "imgui.h"
+#include "backends/imgui_impl_sdl3.h"
+#include "backends/imgui_impl_sdlrenderer3.h"
 
 int main()
 {
-    if (!SDL_Init(SDL_INIT_AUDIO))
+    if (!SDL_Init(SDL_INIT_AUDIO) || !SDL_Init(SDL_INIT_VIDEO))
     {
         std::cerr << "Failed to initialize SDL: " << SDL_GetError() << '\n';
-        return 1;
+        return -1;
     }
 
     try
     {
-        ResourceManager resourceManager;
-
-		resourceManager.loadAudioBuffers();
-        resourceManager.createAudioClips();
-
-		resourceManager.printAudioBuffers();
-		resourceManager.printAudioClips();
-
-        auto clip1 = resourceManager.getAudioClip("Test1");
-		auto clip2 = resourceManager.getAudioClip("Test2");
-
-        if (!clip1)
+        SDL_Window* window = SDL_CreateWindow(
+            "Audio Engine Editor",
+            1200,
+            800,
+            SDL_WINDOW_RESIZABLE
+        );
+        if (!window)
         {
-			std::cerr << "Failed to load audio clip\n";
-			SDL_Quit();
-
-            return 1;
-        }
-        if (!clip2)
-        {
-            std::cerr << "Failed to load audio clip\n";
+			std::cerr << "Window creation failed: " << SDL_GetError() << '\n';
             SDL_Quit();
-
-            return 1;
+            return -1;
         }
 
-		auto source1 = std::make_shared<AudioSource>(clip1);
-		auto source2 = std::make_shared<AudioSource>(clip2);
-
-		AudioMixer mixer;
-		mixer.addSource(source2);
-		mixer.addSource(source1);
-
-		AudioDevice audioDevice;
-
-        if (!audioDevice.initialize(&mixer))
+		SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
+        if (!renderer)
         {
-			std::cerr << "Failed to initialize audio device\n";
+			std::cerr << "Renderer creation failed: " << SDL_GetError() << '\n';
+            SDL_DestroyWindow(window);
             SDL_Quit();
-
-            return 1;
+			return -1;
         }
 
-		source1->setLooping(true);
-		source2->setLooping(true);
-        source1->play();
-        source2->play();
+        IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
 
-        std::cout << "Press ENTER to quit.\n";
-        std::cin.get();
+        ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+		ImGui_ImplSDLRenderer3_Init(renderer);
 
-        audioDevice.shutdown();
+
+		AudioEngine audioEngine;
+        if (!audioEngine.initialize())
+        {
+            std::cerr << "Failed to initialize Audio Engine\n";
+            SDL_DestroyRenderer(renderer);
+            SDL_DestroyWindow(window);
+            SDL_Quit();
+            return -1;
+		}
+
+        EditorUI editor(audioEngine);
+
+		bool running = true;
+
+		// MAIN LOOP //
+
+        while (running)
+        {
+            SDL_Event event;
+            while (SDL_PollEvent(&event))
+            {
+				ImGui_ImplSDL3_ProcessEvent(&event);
+
+                if (event.type == SDL_EVENT_QUIT)
+                {
+                    running = false;
+                }
+            }
+            
+            ImGui_ImplSDLRenderer3_NewFrame();
+            ImGui_ImplSDL3_NewFrame();
+            ImGui::NewFrame();
+
+			editor.render();
+
+			ImGui::Render();
+
+            SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+            SDL_RenderClear(renderer);
+
+			ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+
+			SDL_RenderPresent(renderer);
+		}
+
+		ImGui_ImplSDLRenderer3_Shutdown();
+		ImGui_ImplSDL3_Shutdown();
+
+		ImGui::DestroyContext();
+
+        audioEngine.shutdown();
+
+		SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
     }
 
     catch (const std::exception& e)
