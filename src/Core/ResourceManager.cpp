@@ -14,34 +14,20 @@ namespace
 
 ResourceManager::ResourceManager()
 {
-	checkAudioDirectories();
-
+	createAudioDirectories();
 }
-
-void ResourceManager::checkAudioDirectories()
+	
+void ResourceManager::createAudioDirectories()
 {
-	std::vector<std::string> requiredDirs = {
-		"Assets",
-		"Assets/SoundSrc",
-		"Assets/AudioClips",
-		"Assets/AudioClips/Ambient",
-		"Assets/AudioClips/Music",
-		"Assets/AudioClips/Other",
-		"Assets/AudioClips/SFX",
-		"Assets/AudioClips/UI",
-		"Assets/AudioClips/Voice"
-	};
-
 	for (const auto& dir : requiredDirs)
 	{
-		if (!std::filesystem::exists(dir))
+		try
 		{
 			std::filesystem::create_directories(dir);
-			std::cout << "Created directory: " << dir << std::endl;
 		}
-		else
+		catch (const std::filesystem::filesystem_error& e)
 		{
-			std::cout << "Directory exists: " << dir << std::endl;
+			std::cerr << "Error creating directory " << dir << ": " << e.what() << std::endl;
 		}
 	}
 }

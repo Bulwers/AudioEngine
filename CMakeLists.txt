@@ -39,11 +39,20 @@ add_library(AudioEngineCore
 	src/Core/ResourceManager.cpp
 	src/Core/WavLoader.cpp
 	src/Core/AudioMixer.cpp
+
 	src/Data/AudioBuffer.cpp
 	src/Data/AudioClip.cpp
+
 	src/Playback/AudioSource.cpp
 	src/Playback/AudioDevice.cpp
+
 	src/UI/EditorUI.cpp
+	src/UI/MixerPanel.cpp
+	src/UI/ResourcePanel.cpp
+	src/UI/SourcePanel.cpp
+
+	src/Tick/ITickable.cpp
+	src/Tick/TickSystem.cpp
 )
 
 target_include_directories(AudioEngineCore PUBLIC
@@ -52,6 +61,7 @@ target_include_directories(AudioEngineCore PUBLIC
 	include/Playback
 	include/DSP
 	include/UI
+	include/Tick
 )
 
 target_link_libraries(AudioEngineCore PUBLIC
@@ -59,9 +69,13 @@ target_link_libraries(AudioEngineCore PUBLIC
 	imgui
 )
 
-add_executable(AudioEngine
+add_executable(AudioEngine WIN32
 	src/main.cpp
 )
+
+if (MSVC)
+	target_link_options(AudioEngine PRIVATE "/ENTRY:mainCRTStartup")
+endif()
 
 target_link_libraries(AudioEngine PRIVATE
 	AudioEngineCore

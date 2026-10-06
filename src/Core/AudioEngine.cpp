@@ -1,5 +1,10 @@
 #include "AudioEngine.h"
 
+AudioEngine::AudioEngine(TickSystem* tickSystem)
+	: tickSystem(tickSystem)
+{
+}
+
 AudioEngine::~AudioEngine()
 {
 	shutdown();

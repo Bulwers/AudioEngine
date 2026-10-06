@@ -5,6 +5,7 @@
 
 #include "AudioEngine.h"
 #include "EditorUI.h"
+#include "TickSystem.h"
 #include "imgui.h"
 #include "backends/imgui_impl_sdl3.h"
 #include "backends/imgui_impl_sdlrenderer3.h"
@@ -48,7 +49,10 @@ int main()
 		ImGui_ImplSDLRenderer3_Init(renderer);
 
 
-		AudioEngine audioEngine;
+		TickSystem tickSystem;
+        tickSystem.initialize();
+
+		AudioEngine audioEngine(&tickSystem);
         if (!audioEngine.initialize())
         {
             std::cerr << "Failed to initialize Audio Engine\n";
@@ -81,7 +85,7 @@ int main()
             ImGui_ImplSDL3_NewFrame();
             ImGui::NewFrame();
 
-			editor.render();
+            tickSystem.update();
 
 			ImGui::Render();
 
