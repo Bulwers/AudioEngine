@@ -2,9 +2,13 @@
 #include "imgui.h"
 
 EditorUI::EditorUI(AudioEngine& engine)
-	: audioEngine(engine), ITickable(engine.getTickSystem()), resourcePanel(audioEngine.getResourceManager())
+	: audioEngine(engine), ITickable(engine.getTickSystem()), 
+	resourcePanel(audioEngine.getResourceManager(), [this](const std::string& clipName)
+		{
+			uppdateSelectedSource(audioEngine.createAudioSource(clipName));
+		})
 {
-	selectedSource = audioEngine.createAudioSource("Test1");
+	uppdateSelectedSource(audioEngine.createAudioSource("Test1"));
 }
 
 void EditorUI::tick(float deltaTime)
@@ -17,6 +21,12 @@ void EditorUI::render()
 	renderResourcePanel();
 	renderSourcePanel();
 	renderMixerPanel();
+}
+
+void EditorUI::uppdateSelectedSource(std::shared_ptr<AudioSource> source)
+{
+	selectedSource = std::move(source);
+	sourcePanel.setSelectedSource(selectedSource);
 }
 
 void EditorUI::renderResourcePanel()

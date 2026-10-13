@@ -16,7 +16,7 @@ public:
 
 	void render();
 
-	void uppdateSelectedSource(std::shared_ptr<AudioSource> source) { selectedSource = source; }
+	void uppdateSelectedSource(std::shared_ptr<AudioSource> source);
 
 private:
 

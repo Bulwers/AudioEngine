@@ -4,6 +4,7 @@
 
 void SourcePanel::render()
 {
+	ImGui::SetNextWindowSize(ImVec2(420.0f, 200.0f), ImGuiCond_Appearing);
 	ImGui::Begin("Source Panel");
 	if (!selectedSource)
 	{
