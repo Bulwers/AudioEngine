@@ -45,6 +45,10 @@ int main()
         IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 
+		ImGuiIO& io = ImGui::GetIO();
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
         ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
 		ImGui_ImplSDLRenderer3_Init(renderer);
 

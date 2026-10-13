@@ -2,39 +2,55 @@
 #include "AudioSource.h"
 #include "imgui.h"
 
+#include <algorithm>
+
 void SourcePanel::render()
 {
 	ImGui::SetNextWindowSize(ImVec2(420.0f, 200.0f), ImGuiCond_Appearing);
 	ImGui::Begin("Source Panel");
-	if (!selectedSource)
+
+    auto source = selectedSource.lock();
+	if (!source)
 	{
 		ImGui::Text("No source selected.");
 		ImGui::End();
 		return;
 	}
+
 	if (ImGui::Button("Play"))
 	{
-		selectedSource->play();
+		source->play();
 	}
+
 	ImGui::SameLine();
 	if (ImGui::Button("Pause"))
 	{
-		selectedSource->pause();
+        source->pause();
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Stop"))
 	{
-		selectedSource->stop();
+		source->stop();
 	}
-	float volume = selectedSource->getVolume();
+
+	float volume = source->getVolume();
 	if (ImGui::SliderFloat("Volume", &volume, 0.0f, 1.0f))
 	{
-		selectedSource->setVolume(volume);
+		source->setVolume(volume);
 	}
-	float pitch = selectedSource->getPitch();
+	if (ImGui::InputFloat("Volume Value", &volume, 0.01f, 0.1f, "%.3f"))
+	{
+		source->setVolume(std::clamp(volume, 0.0f, 1.0f));
+	}
+
+	float pitch = source->getPitch();
 	if (ImGui::SliderFloat("Pitch", &pitch, 0.5f, 2.0f))
 	{
-		selectedSource->setPitch(pitch);
+        source->setPitch(pitch);
+	}
+   if (ImGui::InputFloat("Pitch Value", &pitch, 0.01f, 0.1f, "%.3f"))
+	{
+		source->setPitch(std::clamp(pitch, 0.5f, 2.0f));
 	}
 	ImGui::End();
 }

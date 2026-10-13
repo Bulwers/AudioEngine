@@ -54,3 +54,16 @@ std::shared_ptr<AudioSource> AudioEngine::createAudioSource(const std::string& c
 	
 	return source;
 }
+
+void AudioEngine::removeAudioSource(std::shared_ptr<AudioSource> source)
+{
+	if (!source)
+		return;
+
+	audioMixer.removeSource(source);
+	auto it = std::find(sources.begin(), sources.end(), source);
+	if (it != sources.end())
+	{
+		sources.erase(it);
+	}
+}

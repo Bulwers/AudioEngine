@@ -11,5 +11,5 @@ public:
 
 private:
 
-	std::shared_ptr<class AudioSource> selectedSource;
+	std::weak_ptr<class AudioSource> selectedSource;
 };
