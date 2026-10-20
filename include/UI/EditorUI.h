@@ -2,15 +2,14 @@
 
 #include "AudioEngine.h"
 #include "ResourcePanel.h"
-#include "SourcePanel.h"
-#include "MixerPanel.h"
+#include "AudioSourcesPanel.h"
 #include "ITickable.h"
 
 class EditorUI : public ITickable
 {
 public:
 
-	EditorUI(AudioEngine& engine);
+	EditorUI(AudioEngine& engine, TickSystem& tickSystem);
 
 	void tick(float deltaTime) override;
 
@@ -21,14 +20,12 @@ public:
 private:
 
 	void renderResourcePanel();
-	void renderSourcePanel();
-	void renderMixerPanel();
+	void renderAudioSourcesPanel();
 
 	AudioEngine& audioEngine;
 
 	ResourcePanel resourcePanel;
-	SourcePanel sourcePanel;
-	MixerPanel mixerPanel;
+    AudioSourcesPanel audioSourcesPanel;
 
 	std::shared_ptr<AudioSource> selectedSource;
 };

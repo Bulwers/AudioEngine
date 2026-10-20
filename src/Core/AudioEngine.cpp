@@ -1,43 +1,11 @@
 #include "AudioEngine.h"
 
-AudioEngine::AudioEngine(TickSystem* tickSystem)
-	: tickSystem(tickSystem)
-{
-}
-
-AudioEngine::~AudioEngine()
-{
-	shutdown();
-}
-
-bool AudioEngine::initialize()
-{
-	if (initialized)
-		return true;
-
-	resourceManager.loadAudioBuffers();
-	resourceManager.createAudioClips();
-
-	if (!audioDevice.initialize(&audioMixer))
-		return false;
-
-	initialized = true;
-	return true;
-}
-
-void AudioEngine::shutdown()
-{
-	if (!initialized) return;
-
-	audioDevice.shutdown();
-	sources.clear();
-	initialized = false;
-}
+#include <algorithm>
 
 void AudioEngine::loadAudioAssets()
 {
 	resourceManager.loadAudioBuffers();
-	resourceManager.createAudioClips();
+	resourceManager.loadAudioClips();
 }
 
 std::shared_ptr<AudioSource> AudioEngine::createAudioSource(const std::string& clipname)

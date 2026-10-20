@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 
 #include "AudioClip.h"
 
@@ -41,6 +42,10 @@ public:
 	double getPlaybackPosition() const;
 	void setPlaybackPosition(double position);
 
+	double getPlaybackRangeStart() const { return playbackRangeStart; }
+	double getPlaybackRangeEnd() const { return playbackRangeEnd; }
+	void setPlaybackRange(double start, double end);
+
 private:
 
 	std::shared_ptr<AudioClip> clip;
@@ -50,4 +55,6 @@ private:
 	bool loop = false;
 
 	double playbackPosition = 0.0;
+	double playbackRangeStart = 0.0;
+	double playbackRangeEnd = 0.0;
 };

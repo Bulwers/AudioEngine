@@ -7,7 +7,7 @@ add_executable(AudioEngineTests
 	ResourceManagerTests.cpp)
 
 target_link_libraries(AudioEngineTests PRIVATE
-	AudioEngineCore
+	AudioEngineRuntime
 	gtest_main
 )
 

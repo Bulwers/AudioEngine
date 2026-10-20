@@ -1,10 +1,13 @@
 #include "ResourcePanel.h"
+#include "ResourcePanel.h"
 #include "ResourceManager.h"
 #include "imgui.h"
 
+#include <cstring>
+
 namespace
 {
-	const char* audioCategoryToSting(AudioCategory category)
+	const char* audioCategoryToString(AudioCategory category)
 	{
 		switch (category)
 		{
@@ -17,6 +20,19 @@ namespace
 		default: return "Unknown";
 		}
 	}
+
+	AudioCategory indexToCategory(int index)
+	{
+		switch (index)
+		{
+		case 0: return AudioCategory::Ambient;
+		case 1: return AudioCategory::Music;
+		case 2: return AudioCategory::SFX;
+		case 3: return AudioCategory::UI;
+		case 4: return AudioCategory::Voice;
+		default: return AudioCategory::Other;
+		}
+	}
 }
 
 ResourcePanel::ResourcePanel(ResourceManager& resourceManager, std::function<void(const std::string&)> onSourceCreated)
@@ -26,37 +42,100 @@ ResourcePanel::ResourcePanel(ResourceManager& resourceManager, std::function<voi
 
 void ResourcePanel::render()
 {
-	ImGui::SetNextWindowSize(ImVec2(420.0f, 450.0f), ImGuiCond_Appearing);
+	ImGui::SetNextWindowSize(ImVec2(460.0f, 520.0f), ImGuiCond_Appearing);
 	ImGui::Begin("Resource Panel");
 
 	static std::string statusMessage = "Ready.";
 
-	if (ImGui::Button("Load Audio Buffers"))
+	if (!wavFilesInitialized)
 	{
-		resourceManager.loadAudioBuffers();
-		statusMessage = "Audio buffers loaded.";
+		availableWavFiles = resourceManager.getAvailableWavFiles();
+		selectedWavFileIndex = availableWavFiles.empty() ? -1 : 0;
+		wavFilesInitialized = true;
+	}
+	
+	const char* selectedWavLabel = "No .wav files found";
+	if (!availableWavFiles.empty() && selectedWavFileIndex >= 0)
+	{
+		selectedWavLabel = availableWavFiles[static_cast<size_t>(selectedWavFileIndex)].c_str();
+	}
+
+	if (ImGui::BeginCombo("WAV file", selectedWavLabel))
+	{
+		if (availableWavFiles.empty())
+		{
+			ImGui::BeginDisabled();
+			ImGui::Selectable("No .wav files found in Assets/SoundSrc", false);
+			ImGui::EndDisabled();
+		}
+		else
+		{
+			for (int i = 0; i < static_cast<int>(availableWavFiles.size()); ++i)
+			{
+				const bool isSelected = selectedWavFileIndex == i;
+				if (ImGui::Selectable(availableWavFiles[static_cast<size_t>(i)].c_str(), isSelected))
+				{
+					selectedWavFileIndex = i;
+				}
+				if (isSelected)
+				{
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+		}
+		ImGui::EndCombo();
+	}
+
+	ImGui::InputText("Clip Name", newClipName, sizeof(newClipName));
+
+	const char* categories[] = { "Ambient", "Music", "SFX", "UI", "Voice", "Other" };
+	ImGui::Combo("Category", &selectedCategoryIndex, categories, IM_ARRAYSIZE(categories));
+
+	if (ImGui::Button("Create Clip"))
+	{
+		if (selectedWavFileIndex < 0 || selectedWavFileIndex >= static_cast<int>(availableWavFiles.size()))
+		{
+			statusMessage = "Select a .wav file first.";
+		}
+		else
+		{
+			std::string errorMessage;
+			const bool created = resourceManager.createAndSaveAudioClip(
+			availableWavFiles[static_cast<size_t>(selectedWavFileIndex)],
+			newClipName,
+			indexToCategory(selectedCategoryIndex),
+			errorMessage);
+
+			if (created)
+			{
+				selectedClipName = newClipName;
+				statusMessage = "Clip saved to Assets/AudioClips/" + std::string(categories[selectedCategoryIndex]) + "/";
+				std::memset(newClipName, 0, sizeof(newClipName));
+			}
+			else
+			{
+				statusMessage = errorMessage.empty() ? "Failed to save clip." : errorMessage;
+			}
+		}
 	}
 	ImGui::SameLine();
-	if (ImGui::Button("Create Clips"))
+	if (ImGui::Button("Load Clips"))
 	{
-		resourceManager.createAudioClips();
-		statusMessage = "Audio clips created.";
+		resourceManager.loadAudioClips();
+		statusMessage = "Loaded clips.";
 	}
-	ImGui::SameLine();
-	if (ImGui::Button("Save Clips"))
-	{
-		resourceManager.saveAudioClips();
-		statusMessage = "Audio clips saved. Assets/AudioClips";
-	}
+
 	ImGui::Separator();
 
 	const auto& clips = resourceManager.getAudioClips();
+	const bool canCreateSource = static_cast<bool>(onSourceCreated);
+	std::string clipToRemove;
 
 	ImGui::Text("Available Audio Clips:");
 	if (clips.empty())
 	{
 		selectedClipName.clear();
-		ImGui::TextWrapped("No clips available. Please load audio buffers and create clips.");
+		ImGui::TextWrapped("No clips available.");
 	}
 	else
 	{
@@ -65,9 +144,16 @@ void ResourcePanel::render()
 			for (const auto& pair : clips)
 			{
 				const std::string& clipName = pair.first;
-				bool isSelected = (selectedClipName == clipName);
+				const bool isSelected = (selectedClipName == clipName);
+				ImGui::PushID(clipName.c_str());
 
-				if (ImGui::Selectable(clipName.c_str(), isSelected))
+                const float createButtonWidth = ImGui::CalcTextSize("Create").x + ImGui::GetStyle().FramePadding.x * 2.0f;
+				const float removeButtonWidth = ImGui::CalcTextSize("X").x + ImGui::GetStyle().FramePadding.x * 2.0f;
+				const float buttonWidth = createButtonWidth + ImGui::GetStyle().ItemSpacing.x + removeButtonWidth;
+				const float rowWidth = ImGui::GetContentRegionAvail().x;
+				const float selectableWidth = rowWidth > buttonWidth ? rowWidth - buttonWidth - ImGui::GetStyle().ItemSpacing.x : rowWidth;
+
+				if (ImGui::Selectable(clipName.c_str(), isSelected, 0, ImVec2(selectableWidth, 0.0f)))
 				{
 					selectedClipName = clipName;
 				}
@@ -75,8 +161,50 @@ void ResourcePanel::render()
 				{
 					ImGui::SetItemDefaultFocus();
 				}
+
+				ImGui::SameLine();
+				if (!canCreateSource)
+				{
+					ImGui::BeginDisabled();
+				}
+
+				if (ImGui::SmallButton("Create"))
+				{
+					onSourceCreated(clipName);
+					statusMessage = "Audio source created for clip: " + clipName;
+				}
+
+				if (!canCreateSource)
+				{
+					ImGui::EndDisabled();
+				}
+
+				ImGui::SameLine();
+				if (ImGui::SmallButton("X"))
+				{
+					clipToRemove = clipName;
+				}
+
+				ImGui::PopID();
 			}
 			ImGui::EndListBox();
+		}
+	}
+
+	if (!clipToRemove.empty())
+	{
+		std::string errorMessage;
+		if (resourceManager.removeAudioClipFile(clipToRemove, errorMessage))
+		{
+			if (selectedClipName == clipToRemove)
+			{
+				selectedClipName.clear();
+			}
+			statusMessage = "Removed clip file for: " + clipToRemove;
+		}
+		else
+		{
+			statusMessage = errorMessage.empty() ? "Failed to remove clip file." : errorMessage;
 		}
 	}
 
@@ -97,30 +225,13 @@ void ResourcePanel::render()
 		ImGui::TextWrapped("Name: %s", selectedClip->getName().c_str());
 		ImGui::TextWrapped("File Path: %s", selectedClip->getFilePath().c_str());
 		ImGui::Text("Duration: %.2f seconds", selectedClip->getDuration());
-		ImGui::Text("Category: %s", audioCategoryToSting(selectedClip->getCategory()));
+		ImGui::Text("Category: %s", audioCategoryToString(selectedClip->getCategory()));
 		ImGui::Text("Volume: %.2f", selectedClip->getVolume());
 		ImGui::Text("Looping: %s", selectedClip->isLooping() ? "Yes" : "No");
-
-		const bool canCreateSource = static_cast<bool>(onSourceCreated);
-		if (!canCreateSource)
-		{
-			ImGui::BeginDisabled();
-		}
-
-		if (ImGui::Button("Create Audio Source"))
-		{
-			onSourceCreated(selectedClip->getName());
-			statusMessage = "Audio source created for clip: " + selectedClip->getName();
-		}
-		
-		if (!canCreateSource)
-		{
-			ImGui::EndDisabled();
-		}
 	}
 
 	ImGui::Separator();
 	ImGui::TextWrapped("Status: %s", statusMessage.c_str());
-	
+
 	ImGui::End();
 }

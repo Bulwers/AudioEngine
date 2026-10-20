@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 
 #include "AudioClip.h"
 #include "AudioBuffer.h"
@@ -24,14 +25,14 @@ public:
 	void saveAudioClips();
 	void loadAudioBuffers();
 	void loadAudioClips();
+	std::vector<std::string> getAvailableWavFiles() const;
+	bool createAndSaveAudioClip(const std::string& wavFilePath, const std::string& clipName, AudioCategory category, std::string& errorMessage);
+	bool removeAudioClipFile(const std::string& clipName, std::string& errorMessage);
 
 	std::shared_ptr<AudioBuffer> getAudioBuffer(const std::string& filePath);
 	std::shared_ptr<AudioClip> getAudioClip(const std::string& name);
 
 	const std::unordered_map<std::string, std::shared_ptr<AudioClip>>& getAudioClips() const { return audioClips; }
-
-	void printAudioBuffers() const;
-	void printAudioClips() const;
 
 private:
 

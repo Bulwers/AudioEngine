@@ -66,28 +66,3 @@ namespace
 		}
 	}
 }
-
-TEST(ResourceManagerTests, LoadAudioBuffersAndClips)
-{
-	ResourceManager manager;
-
-	const std::filesystem::path wavPath = "Assets/SoundSrc/laser.wav";
-	const std::filesystem::path savedClipPath = "Assets/AudioClips/laser_saved.dat";
-
-	writeTestWavFile(wavPath, 1, 44100, { 0, 32767, -32768, 16384, -16384 });
-
-	manager.loadAudioBuffers();
-	manager.printAudioBuffers();
-	std::cout << "audioBuffers" << "\n";
-
-	manager.loadAudioClips();
-	manager.printAudioClips();
-	std::cout << "audioClips1" << "\n";
-
-	manager.createAudioClips();
-	manager.printAudioClips();
-	std::cout << "audioClips2" << "\n";
-
-	manager.saveAudioClips();
-	std::cout << "ClipsSaved" << "\n";
-}

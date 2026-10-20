@@ -1,17 +1,13 @@
 #include "EditorUI.h"
-#include "EditorUI.h"
 #include "imgui.h"
 
-EditorUI::EditorUI(AudioEngine& engine)
-	: audioEngine(engine), ITickable(engine.getTickSystem()), 
+EditorUI::EditorUI(AudioEngine& engine, TickSystem& tickSystem)
+	: audioEngine(engine), ITickable(tickSystem), 
 	resourcePanel(audioEngine.getResourceManager(), [this](const std::string& clipName)
 		{
 			uppdateSelectedSource(audioEngine.createAudioSource(clipName));
-      }),
-	mixerPanel(audioEngine, [this](std::shared_ptr<AudioSource> source)
-		{
-			uppdateSelectedSource(std::move(source));
-		})
+       }),
+	audioSourcesPanel(audioEngine)
 {
 }
 
@@ -25,14 +21,13 @@ void EditorUI::render()
 	ImGui::DockSpaceOverViewport();
 	
 	renderResourcePanel();
-	renderSourcePanel();
-	renderMixerPanel();
+    renderAudioSourcesPanel();
 }
 
 void EditorUI::uppdateSelectedSource(std::shared_ptr<AudioSource> source)
 {
 	selectedSource = std::move(source);
-	sourcePanel.setSelectedSource(selectedSource);
+	audioSourcesPanel.setSelectedSource(selectedSource);
 }
 
 void EditorUI::renderResourcePanel()
@@ -40,12 +35,7 @@ void EditorUI::renderResourcePanel()
 	resourcePanel.render();
 }
 
-void EditorUI::renderSourcePanel()
+void EditorUI::renderAudioSourcesPanel()
 {
-	sourcePanel.render();
-}
-
-void EditorUI::renderMixerPanel()
-{
-	mixerPanel.render();
+    audioSourcesPanel.render();
 }

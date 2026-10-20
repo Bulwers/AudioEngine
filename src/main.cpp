@@ -4,6 +4,7 @@
 #include <SDL3/SDL.h>    
 
 #include "AudioEngine.h"
+#include "AudioDevice.h"
 #include "EditorUI.h"
 #include "TickSystem.h"
 #include "imgui.h"
@@ -56,17 +57,18 @@ int main()
 		TickSystem tickSystem;
         tickSystem.initialize();
 
-		AudioEngine audioEngine(&tickSystem);
-        if (!audioEngine.initialize())
+		AudioEngine audioEngine;
+		AudioDevice audioDevice;
+		if (!audioDevice.initialize(&audioEngine.getAudioMixer()))
         {
-            std::cerr << "Failed to initialize Audio Engine\n";
+			std::cerr << "Failed to initialize audio output device\n";
             SDL_DestroyRenderer(renderer);
             SDL_DestroyWindow(window);
             SDL_Quit();
             return -1;
 		}
 
-        EditorUI editor(audioEngine);
+		EditorUI editor(audioEngine, tickSystem);
 
 		bool running = true;
 
@@ -106,7 +108,7 @@ int main()
 
 		ImGui::DestroyContext();
 
-        audioEngine.shutdown();
+		audioDevice.shutdown();
 
 		SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);

@@ -43,9 +43,18 @@ void AudioMixer::mixAudio(float* outputBuffer, size_t numFrames, size_t numChann
 		const size_t bufferChannels = static_cast<size_t>(buffer->getChannels());
 		const float volume = source->getVolume() * clip->getVolume();
 		const double pitch = static_cast<double>(source->getPitch());
+		const double rangeStart = std::clamp(source->getPlaybackRangeStart(), 0.0, static_cast<double>(bufferFrames));
+		const double rangeEnd = std::clamp(source->getPlaybackRangeEnd(), rangeStart, static_cast<double>(bufferFrames));
+		const double rangeLength = rangeEnd - rangeStart;
 
 		if (pitch <= 0.0)
 			continue;
+
+		if (rangeLength <= 0.0)
+		{
+			source->stop();
+			continue;
+		}
 
 		double playbackPosition = source->getPlaybackPosition();
 
@@ -53,11 +62,12 @@ void AudioMixer::mixAudio(float* outputBuffer, size_t numFrames, size_t numChann
 		{
 			size_t sourceFrame = static_cast<size_t>(playbackPosition);
 
-			if (sourceFrame >= bufferFrames)
+            if (playbackPosition < rangeStart || sourceFrame >= static_cast<size_t>(rangeEnd))
 			{
 				if (source->isLooping())
 				{
-					playbackPosition = std::fmod(playbackPosition, static_cast<double>(bufferFrames));
+                  const double wrapped = std::fmod(std::max(0.0, playbackPosition - rangeStart), rangeLength);
+					playbackPosition = rangeStart + wrapped;
 					sourceFrame = static_cast<size_t>(playbackPosition);
 				}
 				else
@@ -71,11 +81,11 @@ void AudioMixer::mixAudio(float* outputBuffer, size_t numFrames, size_t numChann
 			const double fractional = playbackPosition - static_cast<double>(frame0);
 			size_t frame1 = frame0 + 1;
 
-			if (frame1 >= bufferFrames)
+			if (frame1 >= static_cast<size_t>(rangeEnd))
 			{
 				if (source->isLooping())
 				{
-					frame1 = 0;
+					frame1 = static_cast<size_t>(rangeStart);
 				}
 				else
 				{
