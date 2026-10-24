@@ -2,36 +2,67 @@
 
 #include <algorithm>
 
+AudioEngine::AudioEngine(AudioFormat format)
+	: audioMixer(format)
+{
+}
+
 void AudioEngine::loadAudioAssets()
 {
+	std::lock_guard<std::mutex> lock(sourcesMutex);
 	resourceManager.loadAudioBuffers();
 	resourceManager.loadAudioClips();
 }
 
+void AudioEngine::collectRetiredSources()
+{
+	std::shared_ptr<AudioSource> retired;
+	while (audioMixer.popRetiredSource(retired))
+		retired.reset();
+}
+
+std::vector<std::shared_ptr<AudioSource>> AudioEngine::getAudioSources()
+{
+	std::lock_guard<std::mutex> lock(sourcesMutex);
+	collectRetiredSources();
+	return sources;
+}
+
 std::shared_ptr<AudioSource> AudioEngine::createAudioSource(const std::string& clipname)
 {
+	std::lock_guard<std::mutex> lock(sourcesMutex);
+	collectRetiredSources();
+
 	auto clip = resourceManager.getAudioClip(clipname);
 
 	if (!clip)
 		return nullptr;
 
 	auto source = std::make_shared<AudioSource>(clip);
-
 	sources.push_back(source);
-	audioMixer.addSource(source);
+	if (!audioMixer.enqueueAddSource(source))
+	{
+		sources.pop_back();
+		return nullptr;
+	}
 	
 	return source;
 }
 
-void AudioEngine::removeAudioSource(std::shared_ptr<AudioSource> source)
+bool AudioEngine::removeAudioSource(const std::shared_ptr<AudioSource>& source)
 {
 	if (!source)
-		return;
+		return false;
+	std::lock_guard<std::mutex> lock(sourcesMutex);
+	collectRetiredSources();
 
-	audioMixer.removeSource(source);
 	auto it = std::find(sources.begin(), sources.end(), source);
-	if (it != sources.end())
-	{
-		sources.erase(it);
-	}
+	if (it == sources.end())
+		return false;
+
+	if (!audioMixer.enqueueRemoveSource(*it))
+		return false;
+
+	sources.erase(it);
+	return true;
 }

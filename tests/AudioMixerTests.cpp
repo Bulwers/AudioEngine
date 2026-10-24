@@ -22,13 +22,13 @@ namespace
 
 TEST(AudioMixerTests, MixesSingleMonoSource)
 {
-	AudioMixer mixer;
+	AudioMixer mixer({ 1, 1 });
 	auto source = createSource({ 0.25f, 0.5f, -0.25f });
 
-	mixer.addSource(source);
+	mixer.enqueueAddSource(source);
 
 	float output[3] = { 99.0f, 99.0f, 99.0f };
-	mixer.mixAudio(output, 3, 1);
+	mixer.mixAudio(output, 3);
 
 	EXPECT_FLOAT_EQ(output[0], 0.25f);
 	EXPECT_FLOAT_EQ(output[1], 0.5f);
@@ -38,15 +38,15 @@ TEST(AudioMixerTests, MixesSingleMonoSource)
 
 TEST(AudioMixerTests, SumsMultipleSources)
 {
-	AudioMixer mixer;
+	AudioMixer mixer({ 1, 1 });
 	auto sourceA = createSource({ 0.25f, 0.25f });
 	auto sourceB = createSource({ 0.5f, -0.25f });
 
-	mixer.addSource(sourceA);
-	mixer.addSource(sourceB);
+	mixer.enqueueAddSource(sourceA);
+	mixer.enqueueAddSource(sourceB);
 
 	float output[2] = { 0.0f, 0.0f };
-	mixer.mixAudio(output, 2, 1);
+	mixer.mixAudio(output, 2);
 
 	EXPECT_FLOAT_EQ(output[0], 0.75f);
 	EXPECT_FLOAT_EQ(output[1], 0.0f);
@@ -54,13 +54,13 @@ TEST(AudioMixerTests, SumsMultipleSources)
 
 TEST(AudioMixerTests, StopsSourceAtEndWhenNotLooping)
 {
-	AudioMixer mixer;
+	AudioMixer mixer({ 1, 1 });
 	auto source = createSource({ 1.0f, 2.0f });
 
-	mixer.addSource(source);
+	mixer.enqueueAddSource(source);
 
 	float output[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	mixer.mixAudio(output, 4, 1);
+	mixer.mixAudio(output, 4);
 
 	EXPECT_FLOAT_EQ(output[0], 1.0f);
 	EXPECT_FLOAT_EQ(output[1], 1.0f);
@@ -71,14 +71,14 @@ TEST(AudioMixerTests, StopsSourceAtEndWhenNotLooping)
 
 TEST(AudioMixerTests, LoopsSourceWhenLoopingIsEnabled)
 {
-	AudioMixer mixer;
+	AudioMixer mixer({ 1, 1 });
 	auto source = createSource({ 1.0f, 0.4f });
 	source->setLooping(true);
 
-	mixer.addSource(source);
+	mixer.enqueueAddSource(source);
 
 	float output[5] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-	mixer.mixAudio(output, 5, 1);
+	mixer.mixAudio(output, 5);
 
 	EXPECT_FLOAT_EQ(output[0], 1.0f);
 	EXPECT_FLOAT_EQ(output[1], 0.4f);
@@ -90,13 +90,13 @@ TEST(AudioMixerTests, LoopsSourceWhenLoopingIsEnabled)
 
 TEST(AudioMixerTests, ClearsOutputBufferBeforeMixing)
 {
-	AudioMixer mixer;
+	AudioMixer mixer({ 1, 1 });
 	auto source = createSource({ 0.5f, 0.25f });
 
-	mixer.addSource(source);
+	mixer.enqueueAddSource(source);
 
 	float output[2] = { 10.0f, 10.0f };
-	mixer.mixAudio(output, 2, 1);
+	mixer.mixAudio(output, 2);
 
 	EXPECT_FLOAT_EQ(output[0], 0.5f);
 	EXPECT_FLOAT_EQ(output[1], 0.25f);

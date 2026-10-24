@@ -35,7 +35,6 @@ private:
 
 	std::vector<float> mixBuffer;
 
-	int sampleRate = 44100;
-	int	channels = 2;
+	AudioFormat format{};
 	int bufferSize = 512;
 };

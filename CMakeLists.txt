@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(AudioEngine)
 
+find_package(Threads REQUIRED)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -32,6 +34,8 @@ target_include_directories(AudioEngineRuntime PUBLIC
 	include/Core
 	include/DSP
 )
+
+target_link_libraries(AudioEngineRuntime PUBLIC Threads::Threads)
 
 # SDL3 backend
 if(AUDIO_BUILD_EDITOR OR AUDIO_BUILD_SDL_BACKEND)

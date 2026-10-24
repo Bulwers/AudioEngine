@@ -32,7 +32,7 @@ void AudioSourcesPanel::render()
     ImGui::SetNextWindowSize(ImVec2(460.0f, 420.0f), ImGuiCond_Appearing);
     ImGui::Begin("Audio Sources Panel");
 
-    auto& sources = audioEngine.getAudioSources();
+    const auto sources = audioEngine.getAudioSources();
     std::shared_ptr<AudioSource> sourceToDelete;
 
     if (sources.empty())
@@ -86,11 +86,10 @@ void AudioSourcesPanel::render()
 
     if (sourceToDelete)
     {
-        if (selectedSource.lock() == sourceToDelete)
+        if (audioEngine.removeAudioSource(sourceToDelete) && selectedSource.lock() == sourceToDelete)
         {
             selectedSource.reset();
         }
-        audioEngine.removeAudioSource(sourceToDelete);
     }
 
     auto source = selectedSource.lock();
