@@ -3,6 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
 
 AudioMixer::AudioMixer(AudioFormat format)
 	: format(format)
@@ -12,6 +13,7 @@ AudioMixer::AudioMixer(AudioFormat format)
 		throw std::invalid_argument("AudioMixer format must have a non-zero sample rate and channel count.");
 	}
 	retainedSources.reserve(MaxSources);
+	retainedProcessorChains.reserve(MaxPendingProcessorChainChanges + 1);
 }
 
 bool AudioMixer::enqueueAddSource(const std::shared_ptr<AudioSource>& source)
@@ -100,6 +102,87 @@ bool AudioMixer::popRetiredSource(std::shared_ptr<AudioSource>& source)
 	return true;
 }
 
+bool AudioMixer::setMasterProcessorChain(std::shared_ptr<AudioProcessorChain> chain)
+{
+	collectRetiredProcessorChains();
+	std::lock_guard<std::mutex> lock(commandMutex);
+	if (pendingProcessorCount == MaxPendingProcessorChainChanges)
+		return false;
+
+	if (chain)
+	{
+		retainedProcessorChains.push_back(chain);
+		chain->seal();
+	}
+	pendingProcessorChains[pendingProcessorWriteIndex] = chain.get();
+	pendingProcessorWriteIndex = (pendingProcessorWriteIndex + 1) % MaxPendingProcessorChainChanges;
+	++pendingProcessorCount;
+	return true;
+}
+
+bool AudioMixer::setAudioProcessor(std::shared_ptr<IAudioProcessor> processor)
+{
+	if (!processor)
+		return setMasterProcessorChain(nullptr);
+
+	auto chain = std::make_shared<AudioProcessorChain>();
+	if (!chain->addProcessor(std::move(processor)))
+		return false;
+	return setMasterProcessorChain(std::move(chain));
+}
+
+std::size_t AudioMixer::collectRetiredProcessorChains()
+{
+	std::vector<std::shared_ptr<AudioProcessorChain>> releaseOnControlThread;
+	{
+		std::lock_guard<std::mutex> lock(commandMutex);
+		releaseOnControlThread.reserve(retiredProcessorCount);
+		while (retiredProcessorCount > 0)
+		{
+			AudioProcessorChain* retired = retiredProcessorChains[retiredProcessorReadIndex];
+			retiredProcessorReadIndex = (retiredProcessorReadIndex + 1) % MaxPendingProcessorChainChanges;
+			--retiredProcessorCount;
+
+			const auto it = std::find_if(retainedProcessorChains.begin(), retainedProcessorChains.end(),
+				[retired](const std::shared_ptr<AudioProcessorChain>& candidate)
+				{
+					return candidate.get() == retired;
+				});
+			if (it != retainedProcessorChains.end())
+			{
+				releaseOnControlThread.push_back(std::move(*it));
+				retainedProcessorChains.erase(it);
+			}
+		}
+	}
+	return releaseOnControlThread.size();
+}
+
+std::size_t AudioMixer::copyVisualizationSamples(float* destination, std::size_t maxSamples) const noexcept
+{
+	if (!destination || maxSamples == 0)
+		return 0;
+
+	const std::uint64_t publishedCount = visualizationWriteCount.load(std::memory_order_acquire);
+	const std::size_t count = static_cast<std::size_t>(std::min<std::uint64_t>(
+		std::min<std::uint64_t>(publishedCount, VisualizationCapacity), maxSamples));
+	const std::uint64_t firstSequence = publishedCount - count;
+	for (std::size_t i = 0; i < count; ++i)
+	{
+		const std::uint64_t sampleSequence = firstSequence + i;
+		const std::size_t index = static_cast<std::size_t>(sampleSequence % VisualizationCapacity);
+		const std::uint64_t expectedMarker = sampleSequence + 1;
+		const std::uint64_t before = visualizationSequences[index].load(std::memory_order_acquire);
+		if (before != expectedMarker)
+			return 0;
+		destination[i] = visualizationSamples[index].load(std::memory_order_relaxed);
+		const std::uint64_t after = visualizationSequences[index].load(std::memory_order_acquire);
+		if (after != expectedMarker)
+			return 0;
+	}
+	return count;
+}
+
 void AudioMixer::processPendingCommands() noexcept
 {
 	std::unique_lock<std::mutex> lock(commandMutex, std::try_to_lock);
@@ -129,6 +212,21 @@ void AudioMixer::processPendingCommands() noexcept
 			retiredWriteIndex = (retiredWriteIndex + 1) % MaxSources;
 			++retiredCount;
 		}
+	}
+
+	if (pendingProcessorCount > 0 && retiredProcessorCount < MaxPendingProcessorChainChanges)
+	{
+		AudioProcessorChain* nextChain = pendingProcessorChains[pendingProcessorReadIndex];
+		pendingProcessorReadIndex = (pendingProcessorReadIndex + 1) % MaxPendingProcessorChainChanges;
+		--pendingProcessorCount;
+
+		if (activeProcessorChain)
+		{
+			retiredProcessorChains[retiredProcessorWriteIndex] = activeProcessorChain;
+			retiredProcessorWriteIndex = (retiredProcessorWriteIndex + 1) % MaxPendingProcessorChainChanges;
+			++retiredProcessorCount;
+		}
+		activeProcessorChain = nextChain;
 	}
 }
 
@@ -308,9 +406,18 @@ void AudioMixer::mixAudio(float* outputBuffer, std::size_t numFrames) noexcept
 		}
 	}
 	const size_t totalSamples = numFrames * numChannels;
+	if (activeProcessorChain)
+		activeProcessorChain->process(outputBuffer, numFrames, format.channels, format.sampleRate);
 
+	const std::uint64_t firstVisualizationSequence = visualizationWriteCount.load(std::memory_order_relaxed);
 	for (size_t i = 0; i < totalSamples; ++i)
 	{
 		outputBuffer[i] = std::clamp(outputBuffer[i], -1.0f, 1.0f);
+		const std::uint64_t sequence = firstVisualizationSequence + i;
+		const std::size_t slot = static_cast<std::size_t>(sequence % VisualizationCapacity);
+		visualizationSequences[slot].store(0, std::memory_order_release);
+		visualizationSamples[slot].store(outputBuffer[i], std::memory_order_relaxed);
+		visualizationSequences[slot].store(sequence + 1, std::memory_order_release);
 	}
+	visualizationWriteCount.store(firstVisualizationSequence + totalSamples, std::memory_order_release);
 }

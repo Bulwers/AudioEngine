@@ -55,6 +55,9 @@ void ResourcePanel::render()
 	}
 	
 	const char* selectedWavLabel = "No .wav files found";
+	const auto& resourceConfig = resourceManager.getConfig();
+	const std::string sourceDirectory = (resourceConfig.rootPath / resourceConfig.sourceDirectory).generic_string();
+	const std::string clipDirectory = (resourceConfig.rootPath / resourceConfig.clipDirectory).generic_string();
 	if (!availableWavFiles.empty() && selectedWavFileIndex >= 0)
 	{
 		selectedWavLabel = availableWavFiles[static_cast<size_t>(selectedWavFileIndex)].c_str();
@@ -65,7 +68,8 @@ void ResourcePanel::render()
 		if (availableWavFiles.empty())
 		{
 			ImGui::BeginDisabled();
-			ImGui::Selectable("No .wav files found in Assets/SoundSrc", false);
+			const std::string emptyMessage = "No .wav files found in " + sourceDirectory;
+			ImGui::Selectable(emptyMessage.c_str(), false);
 			ImGui::EndDisabled();
 		}
 		else
@@ -109,7 +113,7 @@ void ResourcePanel::render()
 			if (created)
 			{
 				selectedClipName = newClipName;
-				statusMessage = "Clip saved to Assets/AudioClips/" + std::string(categories[selectedCategoryIndex]) + "/";
+				statusMessage = "Clip saved to " + clipDirectory + "/" + categories[selectedCategoryIndex] + "/";
 				std::memset(newClipName, 0, sizeof(newClipName));
 			}
 			else

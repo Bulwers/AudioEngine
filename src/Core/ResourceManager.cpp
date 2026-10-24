@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
+#include <utility>
 
 namespace
 {
@@ -27,14 +28,27 @@ namespace
 	}
 }
 
-ResourceManager::ResourceManager()
+ResourceManager::ResourceManager(AudioResourceConfig config)
+	: config(std::move(config))
 {
-	createAudioDirectories();
+	if (this->config.createDirectoriesOnInit)
+		createAudioDirectories();
 }
 
 void ResourceManager::createAudioDirectories()
 {
-	for (const auto& dir : requiredDirs)
+	const std::vector<std::filesystem::path> dirs = {
+		config.rootPath,
+		getSourcePath(),
+		getClipPath(),
+		getClipPath() / "Ambient",
+		getClipPath() / "Music",
+		getClipPath() / "Other",
+		getClipPath() / "SFX",
+		getClipPath() / "UI",
+		getClipPath() / "Voice"
+	};
+	for (const auto& dir : dirs)
 	{
 		try
 		{
@@ -45,6 +59,21 @@ void ResourceManager::createAudioDirectories()
 			std::cerr << "Error creating directory " << dir << ": " << e.what() << std::endl;
 		}
 	}
+}
+
+std::filesystem::path ResourceManager::getSourcePath() const
+{
+	return config.rootPath / config.sourceDirectory;
+}
+
+std::filesystem::path ResourceManager::getClipPath() const
+{
+	return config.rootPath / config.clipDirectory;
+}
+
+std::filesystem::path ResourceManager::getClipFilePath(AudioCategory category, const std::string& clipName) const
+{
+	return getClipPath() / audioCategoryToFolder(category) / (clipName + ".dat");
 }
 
 void ResourceManager::createAudioClips()
@@ -64,8 +93,7 @@ void ResourceManager::saveAudioClips()
 	for (const auto& pair : audioClips)
 	{
 		const std::shared_ptr<AudioClip>& clip = pair.second;
-		const std::string clipFilePath = "Assets/AudioClips/" + audioCategoryToFolder(clip->getCategory()) + "/" + clip->getName() + ".dat";
-		clip->saveToFile(clipFilePath);
+		clip->saveToFile(getClipFilePath(clip->getCategory(), clip->getName()).generic_string());
 	}
 }
 
@@ -73,7 +101,11 @@ void ResourceManager::loadAudioBuffers()
 {
 	audioBuffers.clear();
 
-	for (const auto& file : std::filesystem::recursive_directory_iterator("Assets/SoundSrc"))
+	const auto sourcePath = getSourcePath();
+	if (!std::filesystem::exists(sourcePath))
+		return;
+
+	for (const auto& file : std::filesystem::recursive_directory_iterator(sourcePath))
 	{
         if (!file.is_regular_file())
 		{
@@ -96,7 +128,11 @@ void ResourceManager::loadAudioClips()
 {
 	audioClips.clear();
 
-	for (const auto& file : std::filesystem::recursive_directory_iterator("Assets/AudioClips"))
+	const auto clipPath = getClipPath();
+	if (!std::filesystem::exists(clipPath))
+		return;
+
+	for (const auto& file : std::filesystem::recursive_directory_iterator(clipPath))
 	{
         if (!file.is_regular_file())
 		{
@@ -139,12 +175,13 @@ std::vector<std::string> ResourceManager::getAvailableWavFiles() const
 {
 	std::vector<std::string> files;
 
-	if (!std::filesystem::exists("Assets/SoundSrc"))
+	const auto sourcePath = getSourcePath();
+	if (!std::filesystem::exists(sourcePath))
 	{
 		return files;
 	}
 
-	for (const auto& file : std::filesystem::recursive_directory_iterator("Assets/SoundSrc"))
+	for (const auto& file : std::filesystem::recursive_directory_iterator(sourcePath))
 	{
 		if (!file.is_regular_file())
 			continue;
@@ -202,8 +239,7 @@ bool ResourceManager::createAndSaveAudioClip(const std::string& wavFilePath, con
 
 	try
 	{
-		const std::string clipFilePath = "Assets/AudioClips/" + audioCategoryToFolder(category) + "/" + clipName + ".dat";
-		clip->saveToFile(clipFilePath);
+		clip->saveToFile(getClipFilePath(category, clipName).generic_string());
 	}
 	catch (const std::exception& ex)
 	{
@@ -232,7 +268,7 @@ bool ResourceManager::removeAudioClipFile(const std::string& clipName, std::stri
 	}
 
 	const AudioCategory category = clipIt->second->getCategory();
-	const std::string clipFilePath = "Assets/AudioClips/" + audioCategoryToFolder(category) + "/" + clipName + ".dat";
+	const auto clipFilePath = getClipFilePath(category, clipName);
 
 	std::error_code ec;
 	const bool removed = std::filesystem::remove(clipFilePath, ec);
@@ -244,7 +280,7 @@ bool ResourceManager::removeAudioClipFile(const std::string& clipName, std::stri
 		}
 		else
 		{
-			errorMessage = "Clip file does not exist: " + clipFilePath;
+			errorMessage = "Clip file does not exist: " + clipFilePath.generic_string();
 		}
 		return false;
 	}

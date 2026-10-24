@@ -7,7 +7,9 @@ EditorUI::EditorUI(AudioEngine& engine, TickSystem& tickSystem)
 		{
 			uppdateSelectedSource(audioEngine.createAudioSource(clipName));
        }),
-	audioSourcesPanel(audioEngine)
+	audioSourcesPanel(audioEngine),
+	effectsPanel(audioEngine.getAudioMixer()),
+	visualizerPanel(audioEngine.getAudioMixer(), effectsPanel)
 {
 }
 
@@ -22,6 +24,8 @@ void EditorUI::render()
 	
 	renderResourcePanel();
     renderAudioSourcesPanel();
+	renderEffectsPanel();
+	renderVisualizerPanel();
 }
 
 void EditorUI::uppdateSelectedSource(std::shared_ptr<AudioSource> source)
@@ -38,4 +42,14 @@ void EditorUI::renderResourcePanel()
 void EditorUI::renderAudioSourcesPanel()
 {
     audioSourcesPanel.render();
+}
+
+void EditorUI::renderEffectsPanel()
+{
+	effectsPanel.render();
+}
+
+void EditorUI::renderVisualizerPanel()
+{
+	visualizerPanel.render();
 }

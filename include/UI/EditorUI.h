@@ -3,6 +3,8 @@
 #include "AudioEngine.h"
 #include "ResourcePanel.h"
 #include "AudioSourcesPanel.h"
+#include "EffectsPanel.h"
+#include "VisualizerPanel.h"
 #include "ITickable.h"
 
 class EditorUI : public ITickable
@@ -21,11 +23,15 @@ private:
 
 	void renderResourcePanel();
 	void renderAudioSourcesPanel();
+	void renderEffectsPanel();
+	void renderVisualizerPanel();
 
 	AudioEngine& audioEngine;
 
 	ResourcePanel resourcePanel;
     AudioSourcesPanel audioSourcesPanel;
+	EffectsPanel effectsPanel;
+	VisualizerPanel visualizerPanel;
 
 	std::shared_ptr<AudioSource> selectedSource;
 };

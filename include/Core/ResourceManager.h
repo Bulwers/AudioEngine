@@ -5,6 +5,7 @@
 #include "AudioBuffer.h"
 
 #include "WavLoader.h"
+#include "AudioResourceConfig.h"
 
 #include <vector>
 #include <string>
@@ -16,7 +17,7 @@ class ResourceManager
 {
 public:
 
-	ResourceManager();
+	explicit ResourceManager(AudioResourceConfig config = {});
 
 	void createAudioDirectories();
 
@@ -33,20 +34,15 @@ public:
 	std::shared_ptr<AudioClip> getAudioClip(const std::string& name);
 
 	const std::unordered_map<std::string, std::shared_ptr<AudioClip>>& getAudioClips() const { return audioClips; }
+	const AudioResourceConfig& getConfig() const { return config; }
 
 private:
 
-	std::vector<std::string> requiredDirs = {
-			"Assets",
-			"Assets/SoundSrc",
-			"Assets/AudioClips",
-			"Assets/AudioClips/Ambient",
-			"Assets/AudioClips/Music",
-			"Assets/AudioClips/Other",
-			"Assets/AudioClips/SFX",
-			"Assets/AudioClips/UI",
-			"Assets/AudioClips/Voice"
-	};
+	std::filesystem::path getSourcePath() const;
+	std::filesystem::path getClipPath() const;
+	std::filesystem::path getClipFilePath(AudioCategory category, const std::string& clipName) const;
+
+	AudioResourceConfig config;
 	
 	WavLoader wavLoader;
 

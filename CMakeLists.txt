@@ -26,6 +26,8 @@ add_library(AudioEngineRuntime STATIC
 	src/Core/AudioMixer.cpp
 	src/Core/WavLoader.cpp
 	src/Core/ResourceManager.cpp
+	src/DSP/AudioProcessorChain.cpp
+	src/DSP/FilterEffects.cpp
 )
 
 target_include_directories(AudioEngineRuntime PUBLIC
@@ -78,6 +80,8 @@ if(AUDIO_BUILD_EDITOR)
 		src/UI/EditorUI.cpp
 		src/UI/AudioSourcesPanel.cpp
 		src/UI/ResourcePanel.cpp
+		src/UI/EffectsPanel.cpp
+		src/UI/VisualizerPanel.cpp
 
 		src/Tick/ITickable.cpp
 		src/Tick/TickSystem.cpp

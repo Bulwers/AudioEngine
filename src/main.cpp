@@ -57,7 +57,12 @@ int main()
 		TickSystem tickSystem;
         tickSystem.initialize();
 
-		AudioEngine audioEngine;
+		AudioResourceConfig resourceConfig;
+		resourceConfig.rootPath = "Assets";
+		resourceConfig.sourceDirectory = "SoundSrc";
+		resourceConfig.clipDirectory = "AudioClips";
+		resourceConfig.createDirectoriesOnInit = true;
+		AudioEngine audioEngine({}, resourceConfig);
 		AudioDevice audioDevice;
 		if (!audioDevice.initialize(&audioEngine.getAudioMixer()))
         {

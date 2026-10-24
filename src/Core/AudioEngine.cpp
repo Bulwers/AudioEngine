@@ -1,9 +1,10 @@
 #include "AudioEngine.h"
 
 #include <algorithm>
+#include <utility>
 
-AudioEngine::AudioEngine(AudioFormat format)
-	: audioMixer(format)
+AudioEngine::AudioEngine(AudioFormat format, AudioResourceConfig resourceConfig)
+	: resourceManager(std::move(resourceConfig)), audioMixer(format)
 {
 }
 
@@ -16,6 +17,7 @@ void AudioEngine::loadAudioAssets()
 
 void AudioEngine::collectRetiredSources()
 {
+	audioMixer.collectRetiredProcessorChains();
 	std::shared_ptr<AudioSource> retired;
 	while (audioMixer.popRetiredSource(retired))
 		retired.reset();

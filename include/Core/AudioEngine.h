@@ -12,7 +12,7 @@ class AudioEngine
 {
 public:
 
-	explicit AudioEngine(AudioFormat format = {});
+	explicit AudioEngine(AudioFormat format = {}, AudioResourceConfig resourceConfig = {});
 
 	void loadAudioAssets();
 
